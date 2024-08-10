@@ -1,0 +1,2 @@
+--- @alias RegistryType 'object'|'entity'
+--- @alias RegistryInstanceType Object|Entity

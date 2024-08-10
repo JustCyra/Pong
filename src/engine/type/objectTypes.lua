@@ -1,0 +1,1 @@
+--- @alias ObjectRenderType 'image' | 'fill' | 'line' | 'none'
