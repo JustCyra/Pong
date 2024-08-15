@@ -4,7 +4,6 @@
 --- @field namespace string?
 local identifier = {}
 identifier.__index = identifier
-identifier.__tostring = identifier.toString
 
 local format = '%s:%s'
 local translation_key_format = '%s.%s.%s'
@@ -45,6 +44,20 @@ function identifier:toString()
     return string.format(format, self:unpack())
 end
 
+--- Compares 2 `identifier` if they're equal
+--- @param id Identifer|string
+--- @return boolean
+function identifier:equals(id)
+    local id_type = type(id)
+    if not (id_type == 'table' or id_type == 'string') then
+        error(string.format('Cannot compare an "identifier" to a not compatible type!\nExpected "identifier" or "string", got %s', id_type), 2)
+    end
+
+    return
+        id_type == 'string' and self:toString() == id or
+        id_type == 'table' and self.namespace == id.namespace and self.path == id.path
+end
+
 --- Gets or creates a Translation Key prefixed with a given `key`
 --- @param key string
 --- @return string
@@ -56,5 +69,8 @@ function identifier:getOrCreateTranslationKey(key)
 
     return self.translation_key
 end
+
+identifier.__tostring = identifier.toString
+-- identifier.__eq = identifier.equals
 
 return identifier

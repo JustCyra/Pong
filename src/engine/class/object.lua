@@ -1,9 +1,6 @@
-local vectors   = require "src.engine.class.vectors"
-local registry  = require "src.engine.class.registry"
-
 --- @class Object
 --- @field created boolean
---- @field type RegistryType
+--- @field type 'object'
 --- @field id Identifer
 ---
 --- @field renderType ObjectRenderType
@@ -12,6 +9,7 @@ local registry  = require "src.engine.class.registry"
 --- @field size Vector2
 --- @field collision Vector2?
 ---
+--- @field flags ObjectFlags?
 --- @field components ComponentList?
 ---
 --- @field load fun(self: self)?
@@ -19,7 +17,6 @@ local registry  = require "src.engine.class.registry"
 --- @field draw fun(self: self)?
 local object = {}
 object.__index = object
-object.__tostring = object.toString
 
 local format = 'Object[%s] | Pos: %s'
 
@@ -42,14 +39,14 @@ function object:create()
     ))
     self.created = true
     self.type = 'object'
-    registry:register(self)
+    Registry:register(self)
     return self
 end
 
 --- Remove this instance of `object`
 --- @return nil
 function object:delete()
-    registry:unregister(self)
+    Registry:unregister(self)
     self = nil
     return nil
 end
@@ -79,7 +76,7 @@ end
 --- @return self object
 function object:setPos(x_or_vec, y)
     if type(x_or_vec) == "number" then
-        self.pos = vectors.vec2(x_or_vec, y)
+        self.pos = Vectors.vec2(x_or_vec, y)
     else
         self.pos = x_or_vec--[[@as Vector2]]
     end
@@ -92,7 +89,7 @@ end
 --- @return self object
 function object:setSize(x_or_vec, y)
     if type(x_or_vec) == "number" then
-        self.size = vectors.vec2(x_or_vec, y)
+        self.size = Vectors.vec2(x_or_vec, y)
     else
         self.size = x_or_vec--[[@as Vector2]]
     end
@@ -108,7 +105,7 @@ function object:setCollision(x_or_vec, y)
     if not x_or_vec and self.size then
         self.collision = self.size:copy()
     elseif type(x_or_vec) == "number" then
-        self.collision = vectors.vec2(x_or_vec, y)
+        self.collision = Vectors.vec2(x_or_vec, y)
     else
         self.collision = x_or_vec--[[@as Vector2]]
     end
@@ -120,7 +117,34 @@ function object:setCollision(x_or_vec, y)
     return self
 end
 
---- Set instances custom Data
+--- Set instances Flags
+--- @param flags ObjectFlags|ObjectFlag
+--- @param state boolean?
+--- @return self object
+function object:setFlags(flags, state)
+    if type(flags) == 'table' then
+        self.flags = flags
+    elseif type(flags) == 'string' then
+        if not self.flags then
+            self.flags = {}
+        end
+        self.flags[flags] = state
+    end
+
+    return self
+end
+
+--- Get instances Flags
+--- @param flag ObjectFlag?
+--- @return ObjectFlags|true|nil
+--- @nodiscard
+function object:getFlags(flag)
+    if self.flags then
+        return flag and self.flags[flag] or self.flags
+    end
+end
+
+--- Set instances Components
 --- @param components ComponentList?
 --- @return self object
 function object:setComponents(components)
@@ -128,11 +152,11 @@ function object:setComponents(components)
     return self
 end
 
---- Get instances Component by `id`
---- @param id ComponentID
---- @return any|ComponentList|nil
+--- Get instances Components
+--- @param id ComponentID? If specified, only gets that component
+--- @return ComponentList|any|nil
 --- @nodiscard
-function object:getComponent(id)
+function object:getComponents(id)
     if self.components then
         return id and self.components[id] or self.components
     end
@@ -144,16 +168,13 @@ end
 --- @nodiscard
 function object:getCustomData(key)
     local component_custom_data = Components.types.engine_custom_data
-    if not (self.components and self.components[component_custom_data]) then
+
+    if not self.components then
         return
     end
 
     local custom_data = self.components[component_custom_data]
-    if key and custom_data[key] then
-        return custom_data[key]
-    else
-        return custom_data
-    end
+    return key and custom_data[key] or custom_data
 end
 
 --- Gets a point where the `object` origin is
@@ -191,6 +212,10 @@ end
 --- @param offset Vector2?
 --- @return boolean
 function object:isCollidingWith(target, offset)
+    if self:getFlags('ignore_collisions') then
+        return false
+    end
+
     offset = offset or {x = 0, y = 0}
     local x = self.pos.x + offset.x
     local y = self.pos.y + offset.y
@@ -214,5 +239,7 @@ function object:draw()
         love.graphics.rectangle(self.renderType, self.pos.x, self.pos.y, self.size.x, self.size.y)
     end
 end
+
+object.__tostring = object.toString
 
 return object

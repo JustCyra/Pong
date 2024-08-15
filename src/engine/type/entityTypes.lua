@@ -1,0 +1,6 @@
+--- @alias EntityFlags
+--- | { ignore_collisions: boolean?, is_cpu: boolean?, no_gravity: boolean?, is_grounded: boolean? }
+--- @alias EntityFlag ObjectFlag
+--- | 'is_cpu'
+--- | 'no_gravity'
+--- | 'is_grounded'

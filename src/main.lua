@@ -192,7 +192,7 @@ function love.load()
         :setRenderType('fill')
         :setPos(50, height/2 - 100/2)
         :setSize(25, 100)
-        :setCollision() --[[@as Entity]]
+        :setCollision()
         :setAcceleration(1500)
         -- :setMoveInputs(nil, nil, {'w'}, {'s'})
         :setComponents(Components.new()
@@ -201,14 +201,14 @@ function love.load()
             })
             :engine_apply_vertical_movement(cpu_movement)
             :create()
-        ) --[[@as Entity]]
+        )
     :create()
 
     pin_right = Entity.new(Identifier.new('pin_right'))
         :setRenderType('fill')
         :setPos(width - 75, height/2 - 100/2)
         :setSize(25, 100)
-        :setCollision() --[[@as Entity]]
+        :setCollision()
         :setAcceleration(1500)
         :setComponents(Components.new()
             :engine_custom_data({
@@ -216,7 +216,7 @@ function love.load()
             })
             :engine_apply_vertical_movement(cpu_movement)
             :create()
-        ) --[[@as Entity]]
+        )
     :create()
 end
 
@@ -226,7 +226,7 @@ end
 
 function love.draw()
     Registry:draw()
-    
+
     love.graphics.print(string.format('FPS: %s', love.timer.getFPS()), 0, 0)
     love.graphics.print(string.format('Scores: %s/%s', score.left, score.right), 0, 14)
 end

@@ -30,6 +30,40 @@ function registry:unregister(instance)
     end
 end
 
+--- Get a registered entry from the `registry` list by `identifier`
+--- @param id Identifer|string
+--- @param key RegistryType?
+--- @return RegistryInstanceType? instance, RegistryType? key
+function registry:getByID(id, key)
+    if key then
+        for _, v in pairs(self.list[key]) do
+            if v.id:equals(id) then
+                return v, key
+            end
+        end
+    else
+        for k, list in pairs(self.list) do
+            for _, v in pairs(list) do
+                if v.id:equals(id) then
+                    return v, k
+                end
+            end
+        end
+    end
+end
+
+--- @param tbl table
+--- @param func fun(instance: RegistryInstanceType): break: true?
+--- @return boolean returned_early
+local function runFunc(tbl, func)
+    for _, value in pairs(tbl) do
+        if func(value) then
+            return true
+        end
+    end
+    return false
+end
+
 --- Apply a function for each registered entry
 --- @param key RegistryType|(RegistryType)[]|nil
 --- @param func fun(instance: RegistryInstanceType): break: true?
@@ -37,26 +71,27 @@ function registry:forEach(key, func)
     if key then
         if type(key) == 'table' then
             for _, k in ipairs(key) do
-                for _, value in pairs(self.list[k]) do
-                    if func(value) then
-                        break
-                    end
-                end
+                runFunc(self.list[k], func)
             end
         else
-            for _, value in pairs(self.list[key]) do
-                if func(value) then
-                    break
-                end
-            end
+            runFunc(self.list[key], func)
         end
     else
         for _, list in pairs(self.list) do
-            for _, value in pairs(list) do
-                if func(value) then
-                    break
-                end
-            end
+            runFunc(list, func)
+        end
+    end
+end
+
+--- @param func function
+--- @param instance RegistryInstanceType
+--- @param delta number?
+local function runComponentFunc(func, instance, delta)
+    if func and type(func) == 'function' then
+        if delta then
+            func(instance, delta)
+        else
+            func(instance)
         end
     end
 end
@@ -65,10 +100,7 @@ end
 --     self:forEach(nil, function (instance)
 --         --- @diagnostic disable-next-line: param-type-mismatch
 --         if instance.load then instance:load() end
---         local load = instance:getComponent(Components.types.love_load)
---         if load and type(load) == 'function' then
---             load(instance)
---         end
+--         runComponentFunc(instance:getComponents(Components.types.love_load), instance)
 --     end)
 -- end
 
@@ -76,10 +108,7 @@ function registry:update(delta)
     self:forEach(nil, function (instance)
         --- @diagnostic disable-next-line: param-type-mismatch
         if instance.update then instance:update(delta) end
-        local update = instance:getComponent(Components.types.love_update)
-        if update and type(update) == 'function' then
-            update(instance, delta)
-        end
+        runComponentFunc(instance:getComponents(Components.types.love_update), instance, delta)
     end)
 end
 
@@ -87,10 +116,7 @@ function registry:draw()
     self:forEach(nil, function (instance)
         --- @diagnostic disable-next-line: param-type-mismatch
         if instance.draw then instance:draw() end
-        local draw = instance:getComponent(Components.types.love_draw)
-        if draw and type(draw) == 'function' then
-            draw(instance)
-        end
+        runComponentFunc(instance:getComponents(Components.types.love_draw), instance)
     end)
 end
 

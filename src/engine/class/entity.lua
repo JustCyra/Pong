@@ -1,22 +1,19 @@
-local object    = require "src.engine.class.object"
-local vectors   = require "src.engine.class.vectors"
-local registry  = require "src.engine.class.registry"
-local utility   = require "src.engine.class.utility"
-local input     = require "src.engine.class.input"
-
 --- @class Entity : Object
---- @field cpu boolean
----
+--- @field __parent Object
+--- @field type 'entity'
+--- 
 --- @field vel Vector2
 --- @field acceleration number
 --- @field moveInputs { right: string[]?, left: string[]?, up: string[]?, down: string[]? }?
 ---
+--- @field flags EntityFlags? 
+---
 --- @field load fun(self: self)?
 --- @field update fun(self: self, delta: number)?
 --- @field draw fun(self: self)?
-local entity = utility.copyTable(object)
+local entity = setmetatable({}, Object)
 entity.__index = entity
-entity.__tostring = entity.toString
+entity.__parent = Object
 
 local format = 'Entity[%s] | Pos: %s'
 
@@ -24,7 +21,7 @@ local format = 'Entity[%s] | Pos: %s'
 --- @param id Identifer
 --- @return Entity entity
 function entity.new(id)
-    return setmetatable({ created = false, id = id, vel = vectors.vec2() }, entity)
+    return setmetatable({ created = false, id = id, vel = Vectors.vec2() }, entity)
 end
 
 --- Finilize creation of a new `entity`
@@ -40,8 +37,14 @@ function entity:create()
     ))
     self.created = true
     self.type = 'entity'
-    registry:register(self)
+    Registry:register(self)
     return self
+end
+
+--- Remove this instance of `object`
+--- @return nil
+function entity:delete()
+    return self.__parent.delete(self)
 end
 
 --- @return string
@@ -49,9 +52,47 @@ function entity:toString()
     return string.format(format, self.id:toString(), self.pos:toString())
 end
 
+--- Gets this instance Translation Key
+--- @return string
+function entity:getTranslationKey()
+    return self.__parent.getTranslationKey(self)
+end
+
+--- Set instances Render Type
+--- @param renderType ObjectRenderType
+--- @return self entity
+function entity:setRenderType(renderType)
+    return self.__parent.setRenderType(self, renderType) --[[@as Entity]]
+end
+
+--- Set instances Position
+--- @param x_or_vec (number|Vector2)?
+--- @param y number?
+--- @return self entity
+function entity:setPos(x_or_vec, y)
+    return self.__parent.setPos(self, x_or_vec, y) --[[@as Entity]]
+end
+
+--- Set instances Size
+--- @param x_or_vec (number|Vector2)?
+--- @param y number?
+--- @return self entity
+function entity:setSize(x_or_vec, y)
+    return self.__parent.setSize(self, x_or_vec, y) --[[@as Entity]]
+end
+
+--- Set and enable/disable instances Collision
+--- If `x_or_vec` is `nil`, `entity.size` is used as an argument
+--- @param x_or_vec (number|Vector2)?
+--- @param y number?
+--- @return self entity
+function entity:setCollision(x_or_vec, y)
+    return self.__parent.setCollision(self, x_or_vec, y) --[[@as Entity]]
+end
+
 --- Set instances Acceleration
 --- @param acceleration any
---- @return Entity
+--- @return self entity
 function entity:setAcceleration(acceleration)
     self.acceleration = acceleration
     return self
@@ -64,7 +105,7 @@ end
 --- @param down string[]?
 function entity:setMoveInputs(right, left, up, down)
     if right or left or up or down then
-        self.cpu = false
+        self:setFlags('is_cpu', false)
         self.moveInputs = {
             right = right,
             left = left,
@@ -72,10 +113,77 @@ function entity:setMoveInputs(right, left, up, down)
             down = down
         }
     else
-        self.cpu = true
+        self:setFlags('is_cpu', true)
         self.moveInputs = nil
     end
     return self
+end
+
+--- Set instances Flags
+--- @param flags EntityFlags|EntityFlag
+--- @param state boolean?
+--- @return self entity
+function entity:setFlags(flags, state)
+    return self.__parent.setFlags(self, flags --[[@as ObjectFlags|ObjectFlag]], state) --[[@as Entity]]
+end
+
+--- Get instances Flags
+--- @param flag EntityFlag?
+--- @return EntityFlags|true|nil
+--- @nodiscard
+function entity:getFlags(flag)
+    return self.__parent.getFlags(self, flag --[[@as ObjectFlag?]]) --[[@as EntityFlags|true|nil]]
+end
+
+--- Set instances Components
+--- @param components ComponentList?
+--- @return self entity
+function entity:setComponents(components)
+    return self.__parent.setComponents(self, components) --[[@as Entity]]
+end
+
+--- Get instances Components
+--- @param id ComponentID? If specified, only gets that component
+--- @return ComponentList|any|nil
+--- @nodiscard
+function entity:getComponents(id)
+    return self.__parent.getComponents(self, id)
+end
+
+--- Get instances Custom Data Component by `key`
+--- @param key string?
+--- @return any?
+--- @nodiscard
+function entity:getCustomData(key)
+    return self.__parent.getCustomData(self, key)
+end
+
+--- Gets a point where the `object` origin is
+--- @param offset_or_x (Vector2|number)? Adds this offset to the result value
+--- @param y number? Adds this offset to the result value
+--- @return Vector2
+function entity:getOriginPoint(offset_or_x, y)
+    return self.__parent.getOriginPoint(self, offset_or_x, y)
+end
+
+--- Gets a center point of the `object`
+--- @return Vector2
+function entity:getCenteredOriginPoint()
+    return self.__parent.getCenteredOriginPoint(self)
+end
+
+--- Gets a center point of the `object` via collision instead of size
+--- @return Vector2?
+function entity:getCenteredCollisionPoint()
+    return self.__parent.getCenteredCollisionPoint(self)
+end
+
+--- Check if this `object` is colliding with another `object`
+--- @param target Object
+--- @param offset Vector2?
+--- @return boolean
+function entity:isCollidingWith(target, offset)
+    return self.__parent.isCollidingWith(self, target, offset)
 end
 
 --- @param direction string[]?
@@ -97,14 +205,14 @@ end
 --- @return (-1|1)?
 function entity:checkHorizontalMovement()
     local result
-    if not self.cpu and self.moveInputs then
+    if not self:getFlags('is_cpu') and self.moveInputs then
         if wasPressed(self.moveInputs.right) then
             result = 1
         elseif wasPressed(self.moveInputs.left) then
             result = -1
         end
     end
-    local custom = self:getComponent(Components.types.engine_apply_horizontal_movement)
+    local custom = self:getComponents(Components.types.engine_apply_horizontal_movement)
     return custom and type(custom) == 'function' and custom(self) or result
 end
 
@@ -112,14 +220,14 @@ end
 --- @return (-1|1)?
 function entity:checkVerticalMovement()
     local result
-    if not self.cpu and self.moveInputs then
+    if not self:getFlags('is_cpu') and self.moveInputs then
         if wasPressed(self.moveInputs.up) then
             result = 1
         elseif wasPressed(self.moveInputs.down) then
             result = -1
         end
     end
-    local custom = self:getComponent(Components.types.engine_apply_vertical_movement)
+    local custom = self:getComponents(Components.types.engine_apply_vertical_movement)
     return custom and type(custom) == 'function' and custom(self) or result
 end
 
@@ -130,7 +238,7 @@ local function adjust_position_on_collision(entity, offset)
     local collided = false
     local adjustment = { x = 0, y = 0 }
 
-    registry:forEach({'object', 'entity'}, function(instance)
+    Registry:forEach({'object', 'entity'}, function(instance)
         if entity == instance or not instance.collision then
             return
         end
@@ -227,5 +335,11 @@ end
 function entity:update(delta)
     self:updatePosition(delta)
 end
+
+function entity:draw()
+    self.__parent.draw(self)
+end
+
+entity.__tostring = entity.toString
 
 return entity

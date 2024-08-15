@@ -200,6 +200,22 @@ function vector:copy()
 end
 
 --- @param self VectorX
+--- @param func fun(index: 1|2|3|4, value: number): value: number
+--- @return VectorX
+function vector:applyFunc(func)
+    self.x = func(1, self.x)
+    self.y = func(2, self.y)
+    if self.z then
+        self.z = func(3, self.z)
+    end
+    if self.w then
+        self.w = func(4, self.w)
+    end
+
+    return self
+end
+
+--- @param self VectorX
 --- @param min number? Default: 0
 --- @param max number? Default: 1
 --- @return VectorX vector
