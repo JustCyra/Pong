@@ -33,8 +33,8 @@ function love.load()
         borderless = false,
         centered = true,
         display = 1,
-        minwidth = 500,
-        minheight = 500,
+        minwidth = 800,
+        minheight = 600,
         highdpi = false,
     })
 
@@ -45,39 +45,36 @@ function love.load()
 
     Identifier.setDefaultNamespace('pong')
 
-    Object(Identifier('wall_top'))
+    Object.new(Identifier.new('wall_top'))
         :setRenderType('fill')
         :setPos(50, 50)
         :setSize(width - 100, 1)
         :setCollision(width, 0)
     :create()
-    
-    Object(Identifier('wall_bottom'))
+    Object.new(Identifier.new('wall_bottom'))
         :setRenderType('fill')
         :setPos(50, height - 50)
         :setSize(width - 100, 1)
         :setCollision(width, 0)
     :create()
-
-    Object(Identifier('wall_left'))
+    Object.new(Identifier.new('wall_left'))
         :setRenderType('fill')
         :setPos(50, 50)
         :setSize(1, height - 100)
         :setCollision(0, height - 100)
-        :setComponents(Components()
+        :setComponents(Components.new()
             :engine_custom_data({
                 game_goal = 1
             })
             :create()
         )
     :create()
-
-    Object(Identifier('wall_right'))
+    Object.new(Identifier.new('wall_right'))
         :setRenderType('fill')
         :setPos(width - 50, 50)
         :setSize(1, height - 100)
         :setCollision(0, height - 100)
-        :setComponents(Components()
+        :setComponents(Components.new()
             :engine_custom_data({
                 game_goal = 2
             })
@@ -85,11 +82,11 @@ function love.load()
         )
     :create()
 
-    game_ball_spawn_point = Object(Identifier('ball_spawn_point'))
+    game_ball_spawn_point = Object.new(Identifier.new('ball_spawn_point'))
         :setRenderType('none')
         :setPos(width/2-12.5, height/2-12.5)
         :setSize(25, 25)
-        :setComponents(Components()
+        :setComponents(Components.new()
             :engine_custom_data({
                 game_ball_spawn_point = true
             })
@@ -97,12 +94,12 @@ function love.load()
         )
     :create()
 
-    game_ball = Object(Identifier('ball'))
+    game_ball = Object.new(Identifier.new('ball'))
         :setRenderType('fill')
         :setPos(game_ball_spawn_point.pos:copy())
         :setSize(game_ball_spawn_point.size:copy())
         :setCollision()
-        :setComponents(Components()
+        :setComponents(Components.new()
             :engine_custom_data({
                 game_ball = true,
                 direction = Vectors.vec2(math.random() > 0.5 and -10 or 10, math.random(-5, 5)),
@@ -180,10 +177,25 @@ function love.load()
                 return -1
             end
         else
-            local middle = height - self.size.y / 2
-            if pin > middle then
+            local screen_center = height - self.size.y / 2
+            local target_pos
+
+            if ball < screen_center / 2 or ball > screen_center + screen_center / 2 then
+                target_pos = screen_center
+            else
+                local target = Registry:getByID(
+                    self.id.path == 'pin_left' and(Identifier.getDefaultNamespace() .. ':pin_right') or
+                    (Identifier.getDefaultNamespace() .. ':pin_left'))
+                if not target then
+                    return false
+                end
+
+                target_pos = target:getCenteredOriginPoint().y
+            end
+
+            if pin > target_pos then
                 return 1
-            elseif pin < middle then
+            elseif pin < target_pos then
                 return -1
             end
         end
@@ -191,14 +203,14 @@ function love.load()
         return false
     end
 
-    pin_left = Entity(Identifier('pin_left'))
+    pin_left = Entity.new(Identifier.new('pin_left'))
         :setRenderType('fill')
         :setPos(50, height/2 - 100/2)
         :setSize(25, 100)
         :setCollision()
         :setAcceleration(1500)
         -- :setMoveInputs(nil, nil, {'w'}, {'s'})
-        :setComponents(Components()
+        :setComponents(Components.new()
             :engine_custom_data({
                 pin_side = 'left'
             })
@@ -207,13 +219,13 @@ function love.load()
         )
     :create()
 
-    pin_right = Entity(Identifier('pin_right'))
+    pin_right = Entity.new(Identifier.new('pin_right'))
         :setRenderType('fill')
         :setPos(width - 75, height/2 - 100/2)
         :setSize(25, 100)
         :setCollision()
         :setAcceleration(1500)
-        :setComponents(Components()
+        :setComponents(Components.new()
             :engine_custom_data({
                 pin_side = 'right'
             })
@@ -232,7 +244,7 @@ function love.draw()
 
     love.graphics.print(string.format('FPS: %s', love.timer.getFPS()), 0, 0)
     love.graphics.print(string.format('Scores: %s/%s', score.left, score.right), 0, 14)
-    -- love.graphics.print(string.format('Test: %s', Vectors(3, 3, 1, 0)), 0, 28)
+    -- love.graphics.print(string.format('Test: %s', Vectors.vec(3, 3, 1, 0)), 0, 28)
 end
 
 function love.keypressed(key, scanCode, isRepeat)

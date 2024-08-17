@@ -304,14 +304,14 @@ function object:draw()
     end
 end
 
-setmetatable(object_class, {
-    --- Create a new instance of `Object`
-    --- @param id Identifer
-    --- @return Object.setters object_unfinished
-    __call = function (_, id)
-        return object_class.new(id)
-    end
-})
+-- setmetatable(object_class, {
+--     --- Create a new instance of `Object`
+--     --- @param id Identifer
+--     --- @return Object.setters object_unfinished
+--     __call = function (_, id)
+--         return object_class.new(id)
+--     end
+-- })
 setmetatable(object, {
     __tostring = object.toString
 })

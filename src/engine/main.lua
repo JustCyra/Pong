@@ -39,6 +39,7 @@ function engine.load()
         :setRenderType('fill')
         :setPos(game_ball_spawn_point.pos:copy())
         :setSize(game_ball_spawn_point.size:copy())
+        :setCollision()
         :setComponents(Components.new()
             :engine_custom_data({
                 game_ball = true,
@@ -97,7 +98,7 @@ function engine.load()
             end)
             :create()
         )
-    game_ball:setCollision(game_ball.size):create()
+    :create()
 
     --- @param self Entity
     local cpu_movement = function (self)
@@ -106,7 +107,7 @@ function engine.load()
         local side = self:getCustomData('pin_side')
         local ball_direction = game_ball:getCustomData('direction').x
 
-        if 
+        if
             side == 'left' and ball_direction == -10 or
             side == 'right' and ball_direction == 10
         then
@@ -131,7 +132,8 @@ function engine.load()
     pin_left = Entity.new(Identifier.new('pin_left'))
         :setRenderType('fill')
         :setPos(50, height/2 - 100/2)
-        :setSize(25, 100) --[[@as Entity]]
+        :setSize(25, 100)
+        :setCollision()
         :setAcceleration(1500)
         -- :setMoveInputs(nil, nil, {'w'}, {'s'})
         :setComponents(Components.new()
@@ -141,12 +143,13 @@ function engine.load()
             :engine_apply_vertical_movement(cpu_movement)
             :create()
         )
-    pin_left:setCollision(pin_left.size):create()
+    :create()
 
     pin_right = Entity.new(Identifier.new('pin_right'))
         :setRenderType('fill')
         :setPos(width - 75, height/2 - 100/2)
-        :setSize(25, 100) --[[@as Entity]]
+        :setSize(25, 100)
+        :setCollision()
         :setAcceleration(1500)
         :setComponents(Components.new()
             :engine_custom_data({
@@ -155,7 +158,7 @@ function engine.load()
             :engine_apply_vertical_movement(cpu_movement)
             :create()
         )
-    pin_right:setCollision(pin_right.size):create()
+    :create()
 end
 
 function engine.update(delta)

@@ -436,14 +436,14 @@ function entity:draw()
     self._parent.draw(self)
 end
 
-setmetatable(entity_class, {
-    --- Create a new instance of `Entity`
-    --- @param id Identifer
-    --- @return Entity.setters entity_unfinished
-    __call = function (_, id)
-        return entity_class.new(id)
-    end
-})
+-- setmetatable(entity_class, {
+--     --- Create a new instance of `Entity`
+--     --- @param id Identifer
+--     --- @return Entity.setters entity_unfinished
+--     __call = function (_, id)
+--         return entity_class.new(id)
+--     end
+-- })
 setmetatable(entity, {
     __tostring = entity.toString
 })

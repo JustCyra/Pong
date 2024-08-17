@@ -460,15 +460,15 @@ function vector:equals(vec_or_x, y, z, w)
     return true
 end
 
-setmetatable(vectors, {
-    --- @param x? number
-    --- @param y? number
-    --- @param z? number
-    --- @param w? number
-    --- @return VectorX
-    __call = function (_, x, y, z, w)
-        return new(x, y, z, w)
-    end
-})
+-- setmetatable(vectors, {
+--     --- @param x? number
+--     --- @param y? number
+--     --- @param z? number
+--     --- @param w? number
+--     --- @return VectorX
+--     __call = function (_, x, y, z, w)
+--         return new(x, y, z, w)
+--     end
+-- })
 
 return vectors

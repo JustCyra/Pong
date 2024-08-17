@@ -75,15 +75,15 @@ function identifier:getOrCreateTranslationKey(key)
     return self.translation_key
 end
 
-setmetatable(identifier_class, {
-    --- Create a new `identifier`
-    --- @param path string
-    --- @param namespace? string
-    --- @return Identifer
-    __call = function (_, path, namespace)
-        return identifier_class.new(path, namespace)
-    end
-})
+-- setmetatable(identifier_class, {
+--     --- Create a new `identifier`
+--     --- @param path string
+--     --- @param namespace? string
+--     --- @return Identifer
+--     __call = function (_, path, namespace)
+--         return identifier_class.new(path, namespace)
+--     end
+-- })
 setmetatable(identifier, {
     __tostring = identifier.toString,
     -- __eq = identifier.equals,
