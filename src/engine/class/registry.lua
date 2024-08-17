@@ -1,5 +1,5 @@
 --- @class Registry
---- @field list table<RegistryType, table<string, RegistryInstanceType> >
+--- @field list table<RegistryType, table<string, RegistryInstanceType>>
 local registry = {
     list = {}
 }
@@ -10,29 +10,29 @@ local registry = {
 function registry:register(instance)
     assert(instance.id, '[REGISTRY]: Cannot register an instance as the `id` was missing!')
 
-    if not self.list[instance.type] then
-        self.list[instance.type] = {}
+    if not self.list[instance._type] then
+        self.list[instance._type] = {}
     end
 
-    self.list[instance.type][instance.id:toString()] = instance
+    self.list[instance._type][instance.id:toString()] = instance
     return instance
 end
 
 --- Remove a registered entry from the `registry` list
 --- @param instance RegistryInstanceType
 function registry:unregister(instance)
-    assert(self.list[instance.type], '[REGISTRY]: Cannot unregister from a registry type (' .. instance.type .. ') that was not used already!')
+    assert(self.list[instance._type], '[REGISTRY]: Cannot unregister from a registry type (' .. instance._type .. ') that was not used already!')
 
-    for key, value in pairs(self.list[instance.type]) do
+    for key, value in pairs(self.list[instance._type]) do
         if value == instance then
-            self.list[instance.type][key] = nil
+            self.list[instance._type][key] = nil
         end
     end
 end
 
 --- Get a registered entry from the `registry` list by `identifier`
 --- @param id Identifer|string
---- @param key RegistryType?
+--- @param key? RegistryType
 --- @return RegistryInstanceType? instance, RegistryType? key
 function registry:getByID(id, key)
     if key then
@@ -65,7 +65,7 @@ local function runFunc(tbl, func)
 end
 
 --- Apply a function for each registered entry
---- @param key RegistryType|(RegistryType)[]|nil
+--- @param key? RegistryType|(RegistryType)[]
 --- @param func fun(instance: RegistryInstanceType): break: true?
 function registry:forEach(key, func)
     if key then
@@ -85,7 +85,7 @@ end
 
 --- @param func function
 --- @param instance RegistryInstanceType
---- @param delta number?
+--- @param delta? number
 local function runComponentFunc(func, instance, delta)
     if func and type(func) == 'function' then
         if delta then

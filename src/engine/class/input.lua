@@ -1,5 +1,5 @@
 --- @class Input
---- @field lastKeyPress string?
+--- @field lastKeyPress? string
 local input = {}
 
 --- @param key string

@@ -1,80 +1,70 @@
+--- @class Object.class
+--- @field _parent nil
+local object_class = {}
+object_class.__index = object_class
+object_class._parent = nil
+
+--- @class Object.setters
+--- @field _parent nil
+--- @field id Identifer
+local object_unfinished = {}
+object_unfinished.__index = object_unfinished
+object_unfinished._parent = nil
+
 --- @class Object
---- @field created boolean
---- @field type 'object'
+--- @field _parent nil
+--- @field _type? 'object'
 --- @field id Identifer
 ---
 --- @field renderType ObjectRenderType
 ---
 --- @field pos Vector2
 --- @field size Vector2
---- @field collision Vector2?
+--- @field collision? Vector2
 ---
---- @field flags ObjectFlags?
---- @field components ComponentList?
+--- @field flags? ObjectFlags
+--- @field components? ComponentList
 ---
---- @field load fun(self: self)?
---- @field update fun(self: self, delta: number)?
---- @field draw fun(self: self)?
+--- @field load? fun(self: self)
+--- @field update? fun(self: self, delta: number)
+--- @field draw? fun(self: self)
 local object = {}
 object.__index = object
+object._parent = 'object'
+object._type = 'object'
 
 local format = 'Object[%s] | Pos: %s'
 
---- Create a new instance of `object`
+--- Create a new instance of `Object`
 --- @param id Identifer
---- @return Object object
-function object.new(id)
-    return setmetatable({ created = false, id = id, }, object)
+--- @return Object.setters object_unfinished
+function object_class.new(id)
+    return setmetatable({ id = id }, object_unfinished)
 end
 
---- Finilize creation of a new `object`
---- @return self object
-function object:create()
-    assert(self.renderType and self.pos and self.size, string.format(
-        '[OBJECT]: Cannot create Object "%s" as it is missing properties!\n%s (%s), %s (%s), %s (%s)',
-        self.id:toString(),
-        'renderType', self.renderType,
-        'pos', self.pos,
-        'size', self.size
-    ))
-    self.created = true
-    self.type = 'object'
-    Registry:register(self)
-    return self
+--- Get methods used for setting up an `Object`
+--- @return Object.setters
+function object_class.getSettersClass()
+    return object_unfinished
 end
 
---- Remove this instance of `object`
---- @return nil
-function object:delete()
-    Registry:unregister(self)
-    self = nil
-    return nil
+--- Get methods used by `Object` instances
+--- @return Object
+function object_class.getInstanceClass()
+    return object
 end
 
---- @return string
-function object:toString()
-    return string.format(format, self.id:toString(), self.pos:toString())
-end
-
---- Gets this instance Translation Key
---- @return string
-function object:getTranslationKey()
-    return self.id:getOrCreateTranslationKey(self.type)
-end
-
---- Set instances Render Type
 --- @param renderType ObjectRenderType
---- @return self object
-function object:setRenderType(renderType)
+--- @return self object_unfinished
+function object_unfinished:setRenderType(renderType)
     self.renderType = renderType
     return self
 end
 
---- Set instances Position
---- @param x_or_vec (number|Vector2)?
---- @param y number?
---- @return self object
-function object:setPos(x_or_vec, y)
+--- @param x_or_vec? number|Vector2
+--- @param y? number
+--- @return self object_unfinished
+function object_unfinished:setPos(x_or_vec, y)
     if type(x_or_vec) == "number" then
         self.pos = Vectors.vec2(x_or_vec, y)
     else
@@ -83,11 +73,10 @@ function object:setPos(x_or_vec, y)
     return self
 end
 
---- Set instances Size
---- @param x_or_vec (number|Vector2)?
---- @param y number?
---- @return self object
-function object:setSize(x_or_vec, y)
+--- @param x_or_vec? number|Vector2
+--- @param y? number
+--- @return self object_unfinished
+function object_unfinished:setSize(x_or_vec, y)
     if type(x_or_vec) == "number" then
         self.size = Vectors.vec2(x_or_vec, y)
     else
@@ -98,10 +87,10 @@ end
 
 --- Set and enable/disable instances Collision
 --- If `x_or_vec` is `nil`, `object.size` is used as an argument
---- @param x_or_vec (number|Vector2)?
---- @param y number?
---- @return self object
-function object:setCollision(x_or_vec, y)
+--- @param x_or_vec? number|Vector2
+--- @param y? number
+--- @return self object_unfinished
+function object_unfinished:setCollision(x_or_vec, y)
     if not x_or_vec and self.size then
         self.collision = self.size:copy()
     elseif type(x_or_vec) == "number" then
@@ -117,11 +106,10 @@ function object:setCollision(x_or_vec, y)
     return self
 end
 
---- Set instances Flags
 --- @param flags ObjectFlags|ObjectFlag
---- @param state boolean?
---- @return self object
-function object:setFlags(flags, state)
+--- @param state? boolean
+--- @return self object_unfinished
+function object_unfinished:setFlags(flags, state)
     if type(flags) == 'table' then
         self.flags = flags
     elseif type(flags) == 'string' then
@@ -134,9 +122,87 @@ function object:setFlags(flags, state)
     return self
 end
 
+--- @param components? ComponentList
+--- @return self object_unfinished
+function object_unfinished:setComponents(components)
+    self.components = components
+    return self
+end
+
+--- Finishes creation of `Object` instance
+--- @param self Object.setters
+--- @return Object
+function object_unfinished:create()
+    assert(self.renderType and self.pos and self.size, string.format(
+        '[OBJECT]: Cannot create a new instance of "Object" (%s) as it is missing properties!\n%s (%s), %s (%s), %s (%s)',
+        self.id:toString(),
+        'renderType', self.renderType,
+        'pos', self.pos,
+        'size', self.size
+    ))
+
+    Registry:register(setmetatable(self, object) --[[@as Object]])
+    return self --[[@as Object]]
+end
+
+--- Remove this instance of `Object`
+--- @return nil
+function object:delete()
+    Registry:unregister(self)
+    self = nil
+    return nil
+end
+
+--- @return string
+function object:toString()
+    return string.format(format, self.id:toString(), self.pos:toString())
+end
+
+--- @param renderType ObjectRenderType
+--- @return self object
+function object:setRenderType(renderType)
+    return object_unfinished.setRenderType(self, renderType)
+end
+
+--- @param x_or_vec? number|Vector2
+--- @param y? number
+--- @return self object
+function object:setPos(x_or_vec, y)
+    return object_unfinished.setPos(self, x_or_vec, y)
+end
+
+--- @param x_or_vec? number|Vector2
+--- @param y? number
+--- @return self object
+function object:setSize(x_or_vec, y)
+    return object_unfinished.setSize(self, x_or_vec, y)
+end
+
+--- Set and enable/disable instances Collision
+--- If `x_or_vec` is `nil`, `object.size` is used as an argument
+--- @param x_or_vec? number|Vector2
+--- @param y? number
+--- @return self object
+function object:setCollision(x_or_vec, y)
+    return object_unfinished.setCollision(self, x_or_vec, y)
+end
+
+--- @param flags ObjectFlags|ObjectFlag
+--- @param state? boolean
+--- @return self object
+function object:setFlags(flags, state)
+    return object_unfinished.setFlags(self, flags, state)
+end
+
+--- @param components? ComponentList
+--- @return self object
+function object:setComponents(components)
+    return object_unfinished.setComponents(self, components)
+end
+
 --- Get instances Flags
---- @param flag ObjectFlag?
---- @return ObjectFlags|true|nil
+--- @param flag? ObjectFlag
+--- @return ObjectFlags|boolean|nil
 --- @nodiscard
 function object:getFlags(flag)
     if self.flags then
@@ -144,16 +210,8 @@ function object:getFlags(flag)
     end
 end
 
---- Set instances Components
---- @param components ComponentList?
---- @return self object
-function object:setComponents(components)
-    self.components = components
-    return self
-end
-
 --- Get instances Components
---- @param id ComponentID? If specified, only gets that component
+--- @param id? ComponentID If specified, only gets that component
 --- @return ComponentList|any|nil
 --- @nodiscard
 function object:getComponents(id)
@@ -163,7 +221,7 @@ function object:getComponents(id)
 end
 
 --- Get instances Custom Data Component by `key`
---- @param key string?
+--- @param key? string
 --- @return any?
 --- @nodiscard
 function object:getCustomData(key)
@@ -177,9 +235,15 @@ function object:getCustomData(key)
     return key and custom_data[key] or custom_data
 end
 
---- Gets a point where the `object` origin is
---- @param offset_or_x (Vector2|number)? Adds this offset to the result value
---- @param y number? Adds this offset to the result value
+--- Gets this instance Translation Key
+--- @return string
+function object:getTranslationKey()
+    return self.id:getOrCreateTranslationKey(self._type)
+end
+
+--- Gets a point where the `Object` instance origin is
+--- @param offset_or_x? number|Vector2 Adds this offset to the result value
+--- @param y? number Adds this offset to the result value
 --- @return Vector2
 function object:getOriginPoint(offset_or_x, y)
     if not offset_or_x then
@@ -193,13 +257,13 @@ function object:getOriginPoint(offset_or_x, y)
     return self.pos:copy():add(offset_or_x, y)
 end
 
---- Gets a center point of the `object`
+--- Gets a center point of the `Object` instance
 --- @return Vector2
 function object:getCenteredOriginPoint()
     return self:getOriginPoint(self.pos + self.size / 2)
 end
 
---- Gets a center point of the `object` via collision instead of size
+--- Gets a center point of the `Object` instance via collision instead of size
 --- @return Vector2?
 function object:getCenteredCollisionPoint()
     if self.collision then
@@ -207,9 +271,9 @@ function object:getCenteredCollisionPoint()
     end
 end
 
---- Check if this `object` is colliding with another `object`
+--- Check if this `Object` instance is colliding with another ``Object` instance
 --- @param target Object
---- @param offset Vector2?
+--- @param offset? Vector2
 --- @return boolean
 function object:isCollidingWith(target, offset)
     if self:getFlags('ignore_collisions') then
@@ -240,6 +304,16 @@ function object:draw()
     end
 end
 
-object.__tostring = object.toString
+setmetatable(object_class, {
+    --- Create a new instance of `Object`
+    --- @param id Identifer
+    --- @return Object.setters object_unfinished
+    __call = function (_, id)
+        return object_class.new(id)
+    end
+})
+setmetatable(object, {
+    __tostring = object.toString
+})
 
-return object
+return object_class

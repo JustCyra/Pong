@@ -1,7 +1,11 @@
+--- @class Identifier.class
+local identifier_class = {}
+identifier_class.__index = identifier_class
+
 --- @class Identifer
---- @field translation_key string?
---- @field path string?
---- @field namespace string?
+--- @field translation_key? string
+--- @field path string
+--- @field namespace string
 local identifier = {}
 identifier.__index = identifier
 
@@ -11,21 +15,22 @@ local default_namespace = 'game'
 
 --- Create a new `identifier`
 --- @param path string
---- @param namespace string?
+--- @param namespace? string
 --- @return Identifer
-function identifier.new(path, namespace)
+function identifier_class.new(path, namespace)
     return setmetatable({ path = path, namespace = namespace or default_namespace }, identifier)
 end
 
---- Sets a `namespace` for all `indetifier` functions to use if one is not provided
+--- Sets a `namespace` for all `identifier` functions to use if one is not provided
 --- @param namespace string
-function identifier.setDefaultNamespace(namespace)
+function identifier_class.setDefaultNamespace(namespace)
     default_namespace = namespace
 end
 
---- Gets a `namespace` for all `indetifier` functions to use if one is not provided
+--- Gets a `namespace` for all `identifier` functions to use if one is not provided
 --- @return string namespace
-function identifier.getDefaultNamespace()
+--- @nodiscard
+function identifier_class.getDefaultNamespace()
     return default_namespace
 end
 
@@ -70,7 +75,18 @@ function identifier:getOrCreateTranslationKey(key)
     return self.translation_key
 end
 
-identifier.__tostring = identifier.toString
--- identifier.__eq = identifier.equals
+setmetatable(identifier_class, {
+    --- Create a new `identifier`
+    --- @param path string
+    --- @param namespace? string
+    --- @return Identifer
+    __call = function (_, path, namespace)
+        return identifier_class.new(path, namespace)
+    end
+})
+setmetatable(identifier, {
+    __tostring = identifier.toString,
+    -- __eq = identifier.equals,
+})
 
-return identifier
+return identifier_class

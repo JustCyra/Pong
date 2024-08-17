@@ -1,4 +1,4 @@
---- @class Vectors : table
+--- @class Vectors
 local vectors = {}
 
 --- @class Vector : table
@@ -9,16 +9,16 @@ local vector = {}
 --- @field y number
 
 --- @class Vector3 : Vector2
---- @field z number?
+--- @field z? number
 
 --- @class Vector4 : Vector3
---- @field w number?
+--- @field w? number
 
 --- @alias VectorX Vector2 | Vector3 | Vector4
 
 local format_vec2 = 'vec2[%s, %s]'
-local format_vec3 = 'vec2[%s, %s, %s]'
-local format_vec4 = 'vec2[%s, %s, %s, %s]'
+local format_vec3 = 'vec3[%s, %s, %s]'
+local format_vec4 = 'vec4[%s, %s, %s, %s]'
 
 --- @param vec VectorX
 --- @param arg number|VectorX
@@ -108,10 +108,10 @@ local function __div(vec, arg)
     end
 end
 
---- @param x number?
---- @param y number?
---- @param z number?
---- @param w number?
+--- @param x? number
+--- @param y? number
+--- @param z? number
+--- @param w? number
 --- @return VectorX
 local function new(x, y, z, w)
     return setmetatable({
@@ -130,47 +130,41 @@ local function new(x, y, z, w)
     })
 end
 
---- @param x number?
---- @param y number?
+--- @param x? number
+--- @param y? number
 --- @return Vector2 vector
 --- @nodiscard
 function vectors.vec2(x, y)
-    return new(x or 0, y or 0)
+    return new(x, y)
 end
 
---- @param x number?
---- @param y number?
---- @param z number?
+--- @param x? number
+--- @param y? number
+--- @param z? number
 --- @return Vector3 vector
 --- @nodiscard
 function vectors.vec3(x, y, z)
-    return new(x or 0, y or 0, z or 0)
+    return new(x, y, z or 0)
 end
 
---- @param x number?
---- @param y number?
---- @param z number?
---- @param w number?
+--- @param x? number
+--- @param y? number
+--- @param z? number
+--- @param w? number
 --- @return Vector4 vector
 --- @nodiscard
 function vectors.vec4(x, y, z, w)
-    return new(x or 0, y or 0, z or 0, w or 0)
+    return new(x, y, z or 0, w or 0)
 end
 
---- @param x number?
---- @param y number?
---- @param z number?
---- @param w number?
+--- @param x? number
+--- @param y? number
+--- @param z? number
+--- @param w? number
 --- @return VectorX vector
 --- @nodiscard
 function vectors.vec(x, y, z, w)
-    if w and z then
-        return new(x, y, z, w)
-    elseif z then
-        return new(x, y, z)
-    else
-        return new(x, y)
-    end
+    return new(x, y, z, w)
 end
 
 --- @return string
@@ -216,8 +210,8 @@ function vector:applyFunc(func)
 end
 
 --- @param self VectorX
---- @param min number? Default: 0
---- @param max number? Default: 1
+--- @param min? number Default: 0
+--- @param max? number Default: 1
 --- @return VectorX vector
 function vector:clamp(min, max)
     min = min or 0
@@ -320,54 +314,52 @@ function vector:normalize()
     return self:div(len)
 end
 
---- @param self VectorX
---- @param x (number|VectorX)? Default: 0
---- @param y number? Default: `x`
---- @param z number? Default: `x` or `nil` if not `Vector3` or `Vector4`
---- @param w number? Default: `x` or `nil` if not `Vector4`
---- @return VectorX vector
-function vector:set(x, y, z, w)
-    if not x then
-        x, y, z, w = 0, 0, 0, 0
-    elseif type(x) == 'number' then
-        x = x or 0
-        y = y or x
-        z = z or (self.z and x)
-        w = w or (self.w and x)
-    else
-        x, y, z, w = x:unpack()
+--- @param vec VectorX
+--- @param default number
+--- @param vec_or_x? number|VectorX
+--- @param y? number
+--- @param z? number
+--- @param w? number
+--- @return number x, number y, number? z, number? w
+local function calcVectorToNumbers(vec, default, vec_or_x, y, z, w)
+    if not vec_or_x then
+        return default, default, vec.z and default, vec.w and default
     end
 
-    self.x = x
-    self.y = y
-    if self.z then
-        self.z = z
+    if type(vec_or_x) == 'number' then
+        return vec_or_x, y or vec_or_x, vec.z and (z or vec_or_x), vec.w and (w or vec_or_x)
     end
-    if self.w then
-        self.w = w
-    end
+
+    return vec_or_x:unpack()
+end
+
+--- @param self VectorX
+--- @param vec_or_x? number|VectorX Default: 0
+--- @param y? number Default: `x`
+--- @param z? number Default: `x` or `nil` if not `Vector3` or `Vector4`
+--- @param w? number Default: `x` or `nil` if not `Vector4`
+--- @return VectorX vector
+function vector:set(vec_or_x, y, z, w)
+    self.x, self.y, self.z, self.w = calcVectorToNumbers(self, 0, vec_or_x, y, z, w)
     return self
 end
 
 --- @param self VectorX
---- @param x (number|VectorX)? Default: 0
---- @param y number? Default: `x`
---- @param z number? Default: `x` or `nil` if not `Vector3` or `Vector4`
---- @param w number? Default: `x` or `nil` if not `Vector4`
 --- @return VectorX vector
-function vector:add(x, y, z, w)
-    if not x then
-        x, y, z, w = 0, 0, 0, 0
-    elseif type(x) == 'number' then
-        x = x or 0
-        y = y or x
-        z = z or (self.z and x)
-        w = w or (self.w and x)
-    else
-        x, y, z, w = x:unpack()
-    end
+function vector:reset()
+    return self:set()
+end
 
-    self.x = self.x + x
+--- @param self VectorX
+--- @param vec_or_x? number|VectorX Default: 0
+--- @param y? number Default: `x`
+--- @param z? number Default: `x` or `nil` if not `Vector3` or `Vector4`
+--- @param w? number Default: `x` or `nil` if not `Vector4`
+--- @return VectorX vector
+function vector:add(vec_or_x, y, z, w)
+    vec_or_x, y, z, w = calcVectorToNumbers(self, 0, vec_or_x, y, z, w)
+
+    self.x = self.x + vec_or_x
     self.y = self.y + y
     if self.z then
         self.z = self.z + z
@@ -379,24 +371,15 @@ function vector:add(x, y, z, w)
 end
 
 --- @param self VectorX
---- @param x (number|VectorX)? Default: 0
---- @param y number? Default: `x`
---- @param z number? Default: `x` or `nil` if not `Vector3` or `Vector4`
---- @param w number? Default: `x` or `nil` if not `Vector4`
+--- @param vec_or_x? number|VectorX Default: 0
+--- @param y? number Default: `x`
+--- @param z? number Default: `x` or `nil` if not `Vector3` or `Vector4`
+--- @param w? number Default: `x` or `nil` if not `Vector4`
 --- @return VectorX vector
-function vector:sub(x, y, z, w)
-    if not x then
-        x, y, z, w = 0, 0, 0, 0
-    elseif type(x) == 'number' then
-        x = x or 0
-        y = y or x
-        z = z or (self.z and x)
-        w = w or (self.w and x)
-    else
-        x, y, z, w = x:unpack()
-    end
+function vector:sub(vec_or_x, y, z, w)
+    vec_or_x, y, z, w = calcVectorToNumbers(self, 0, vec_or_x, y, z, w)
 
-    self.x = self.x - x
+    self.x = self.x - vec_or_x
     self.y = self.y - y
     if self.z then
         self.z = self.z - z
@@ -408,24 +391,15 @@ function vector:sub(x, y, z, w)
 end
 
 --- @param self VectorX
---- @param x (number|VectorX)? Default: 1
---- @param y number? Default: `x`
---- @param z number? Default: `x` or `nil` if not `Vector3` or `Vector4`
---- @param w number? Default: `x` or `nil` if not `Vector4`
+--- @param vec_or_x? number|VectorX Default: 1
+--- @param y? number Default: `x`
+--- @param z? number Default: `x` or `nil` if not `Vector3` or `Vector4`
+--- @param w? number Default: `x` or `nil` if not `Vector4`
 --- @return VectorX vector
-function vector:mul(x, y, z, w)
-    if not x then
-        x, y, z, w = 1, 1, 1, 1
-    elseif type(x) == 'number' then
-        x = x or 1
-        y = y or x
-        z = z or (self.z and x)
-        w = w or (self.w and x)
-    else
-        x, y, z, w = x:unpack()
-    end
+function vector:mul(vec_or_x, y, z, w)
+    vec_or_x, y, z, w = calcVectorToNumbers(self, 1, vec_or_x, y, z, w)
 
-    self.x = self.x * x
+    self.x = self.x * vec_or_x
     self.y = self.y * y
     if self.z then
         self.z = self.z * z
@@ -437,28 +411,18 @@ function vector:mul(x, y, z, w)
 end
 
 --- @param self VectorX
---- @param x (number|VectorX)? Default: 1
---- @param y number? Default: `x`
---- @param z number? Default: `x` or `nil` if not `Vector3` or `Vector4`
---- @param w number? Default: `x` or `nil` if not `Vector4`
+--- @param vec_or_x? number|VectorX Default: 1
+--- @param y? number Default: `x`
+--- @param z? number Default: `x` or `nil` if not `Vector3` or `Vector4`
+--- @param w? number Default: `x` or `nil` if not `Vector4`
 --- @return VectorX vector
-function vector:div(x, y, z, w)
-    if not x then
-        x, y, z, w = 1, 1, 1, 1
-    elseif type(x) == 'number' then
-        x = x or 1
-        y = y or x
-        z = z or (self.z and x)
-        w = w or (self.w and x)
-    else
-        x, y, z, w = x:unpack()
-    end
-
-
-    if x == 0 or y == 0 or z == 0 or w == 0 then
+function vector:div(vec_or_x, y, z, w)
+    vec_or_x, y, z, w = calcVectorToNumbers(self, 1, vec_or_x, y, z, w)
+    if vec_or_x == 0 or y == 0 or z == 0 or w == 0 then
         error("Division by zero in vector division", 2)
     end
-    self.x = self.x / x
+
+    self.x = self.x / vec_or_x
     self.y = self.y / y
     if self.z then
         self.z = self.z / z
@@ -470,10 +434,10 @@ function vector:div(x, y, z, w)
 end
 
 --- @param self VectorX
---- @param vec_or_x (number|VectorX)? Default: 0
---- @param y number? Default: `x`
---- @param z number? Default: `x` or `nil` if not `Vector3` or `Vector4`
---- @param w number? Default: `x` or `nil` if not `Vector4`
+--- @param vec_or_x? number|VectorX
+--- @param y? number
+--- @param z? number
+--- @param w? number
 --- @return boolean
 --- @nodiscard
 function vector:equals(vec_or_x, y, z, w)
@@ -495,5 +459,16 @@ function vector:equals(vec_or_x, y, z, w)
 
     return true
 end
+
+setmetatable(vectors, {
+    --- @param x? number
+    --- @param y? number
+    --- @param z? number
+    --- @param w? number
+    --- @return VectorX
+    __call = function (_, x, y, z, w)
+        return new(x, y, z, w)
+    end
+})
 
 return vectors

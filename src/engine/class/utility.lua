@@ -14,7 +14,7 @@ end
 
 --- Copy a `table` that is nested, without a reference
 --- @param tbl table
---- @param copy_mt boolean?
+--- @param copy_mt? boolean
 --- @return table
 function util.copyTableNested(tbl, copy_mt)
     local result = {}

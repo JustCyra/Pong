@@ -75,4 +75,12 @@ function components:engine_custom_data(data)
     return self
 end
 
+setmetatable(components, {
+    --- Create a new Component Set
+    --- @return Components
+    __call = function (_)
+        return components.new()
+    end,
+})
+
 return components
