@@ -5,20 +5,23 @@ local vectors = {}
 local vector = {}
 
 --- @class Vector2 : Vector
---- @field x number
---- @field y number
+--- @field public x number
+--- @field public y number
 
 --- @class Vector3 : Vector2
---- @field z? number
+--- @field public z? number
 
 --- @class Vector4 : Vector3
---- @field w? number
+--- @field public w? number
 
 --- @alias VectorX Vector2 | Vector3 | Vector4
 
-local format_vec2 = 'vec2[%s, %s]'
-local format_vec3 = 'vec3[%s, %s, %s]'
-local format_vec4 = 'vec4[%s, %s, %s, %s]'
+--- @enum (key) VectorFormat
+local format = {
+    Vector2 = 'vec2[%s, %s]',
+    Vector3 = 'vec3[%s, %s, %s]',
+    Vector4 = 'vec4[%s, %s, %s, %s]',
+}
 
 --- @param vec VectorX
 --- @param arg number|VectorX
@@ -112,7 +115,7 @@ end
 --- @param y? number
 --- @param z? number
 --- @param w? number
---- @return VectorX
+--- @return VectorX vector
 local function new(x, y, z, w)
     return setmetatable({
         x = x or 0,
@@ -167,16 +170,27 @@ function vectors.vec(x, y, z, w)
     return new(x, y, z, w)
 end
 
+--- @param vec VectorX
+--- @return ('Vector4'|'Vector3'|'Vector2')?
+function vectors.isVector(vec)
+    if type(vec) ~= 'table' or not (vec.x and vec.y) then
+        return
+    end
+
+    if vec.w then
+        return 'Vector4'
+    elseif vec.z then
+        return 'Vector3'
+    else
+        return 'Vector2'
+    end
+end
+
+--- @param self VectorX
 --- @return string
 --- @nodiscard
 function vector:toString()
-    if self.w then
-        return string.format(format_vec4, self:unpack())
-    elseif self.z then
-        return string.format(format_vec3, self:unpack())
-    else
-        return string.format(format_vec2, self:unpack())
-    end
+    return string.format(format[vectors.isVector(self)], self:unpack())
 end
 
 --- @param self VectorX
@@ -187,7 +201,7 @@ function vector:unpack()
 end
 
 --- @param self VectorX
---- @return VectorX copy
+--- @return VectorX copy_vector
 --- @nodiscard
 function vector:copy()
     return new(self:unpack())
@@ -195,7 +209,7 @@ end
 
 --- @param self VectorX
 --- @param func fun(index: 1|2|3|4, value: number): value: number
---- @return VectorX
+--- @return VectorX vector
 function vector:applyFunc(func)
     self.x = func(1, self.x)
     self.y = func(2, self.y)
@@ -237,7 +251,7 @@ function vector:distanceSquared(vec)
 
     if self.z and vec.z then
         local dz = vec.z - self.z
-        
+
         if self.w and vec.w then
             local dw = vec.w - self.w
             return dx * dx + dy * dy + dz * dz + dw * dw
@@ -465,7 +479,7 @@ end
 --     --- @param y? number
 --     --- @param z? number
 --     --- @param w? number
---     --- @return VectorX
+--     --- @return VectorX vector
 --     __call = function (_, x, y, z, w)
 --         return new(x, y, z, w)
 --     end

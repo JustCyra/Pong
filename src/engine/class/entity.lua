@@ -1,27 +1,29 @@
 --- @class Entity.class : Object.class
---- @field _parent Object.class
+--- @field protected _parent Object.class
 local entity_class = setmetatable({}, Object)
 entity_class.__index = entity_class
 entity_class._parent = Object
 
 --- @class Entity.setters : Object.setters
+--- @field protected _parent Object.setters
 local entity_unfinished = setmetatable({}, Object.getSettersClass())
 entity_unfinished.__index = entity_unfinished
 entity_unfinished._parent = Object.getSettersClass()
 
 --- @class Entity : Object
---- @field type? 'entity'
+--- @field protected _parent Object
+--- @field public _type? 'entity'
 --- 
---- @field vel Vector2
---- @field acceleration integer
---- @field moveInputs? { right?: string[], left?: string[], up?: string[], down?: string[] }
+--- @field public vel Vector2
+--- @field public acceleration integer
+--- @field public moveInputs? { right?: string[], left?: string[], up?: string[], down?: string[] }
 ---
---- @field flags? EntityFlags 
+--- @field public flags? EntityFlags 
 ---
---- @field load? fun(self: self)
---- @field update? fun(self: self, delta: number)
---- @field draw? fun(self: self)
-local entity = setmetatable({}, Object.getInstanceClass())
+--- @field public load? fun(self: self)
+--- @field public update? fun(self: self, delta: number)
+--- @field public draw? fun(self: self)
+local entity = setmetatable({} --[[@as Entity]], Object.getInstanceClass())
 entity.__index = entity
 entity._type = 'entity'
 entity._parent = Object.getInstanceClass()
@@ -32,7 +34,7 @@ local format = 'Entity[%s] | Pos: %s'
 --- @param id Identifer
 --- @return Entity.setters entity_unfinished
 function entity_class.new(id)
-    return setmetatable({ id = id, vel = Vectors.vec2() }, entity_unfinished)
+    return setmetatable({ id = id, flags = {}, vel = Vectors.vec2() }, entity_unfinished)
 end
 
 --- Get methods used for setting up an `Entity`
@@ -139,14 +141,23 @@ function entity_unfinished:create()
         'acceleration', self.acceleration
     ))
 
-    Registry:register(setmetatable(self, entity) --[[@as Entity]])
-    return self --[[@as Entity]]
+    --- @diagnostic disable-next-line: cast-type-mismatch
+    --- @cast self Entity
+    self._deleted = false
+    Registry:register(setmetatable(self, entity))
+    return self
 end
 
 --- Remove this instance of `Entity`
 --- @return nil
 function entity:delete()
     return self._parent.delete(self)
+end
+
+--- @return boolean
+--- @nodiscard
+function entity:exists()
+    return self._parent.exists(self)
 end
 
 --- @return string
@@ -186,8 +197,7 @@ end
 --- @param acceleration any
 --- @return self entity
 function entity:setAcceleration(acceleration)
-    self.acceleration = acceleration
-    return self
+    return entity_unfinished.setAcceleration(self, acceleration) --[[@as self]]
 end
 
 --- Sets the movement keys for this `entity` and marks it as a player `entity`
@@ -196,19 +206,7 @@ end
 --- @param up string[]?
 --- @param down string[]?
 function entity:setMoveInputs(right, left, up, down)
-    if right or left or up or down then
-        self:setFlags('is_cpu', false)
-        self.moveInputs = {
-            right = right,
-            left = left,
-            up = up,
-            down = down
-        }
-    else
-        self:setFlags('is_cpu', true)
-        self.moveInputs = nil
-    end
-    return self
+    return entity_unfinished.setMoveInputs(self, right, left, up, down) --[[@as self]]
 end
 
 --- @param flags EntityFlags|EntityFlag
@@ -224,13 +222,14 @@ function entity:setComponents(components)
     return entity_unfinished.setComponents(self, components) --[[@as self]]
 end
 
---- Get instances Flags
---- @param flag EntityFlag? If specified, only gets that flag
---- @return EntityFlags|true|nil
---- @nodiscard
-function entity:getFlags(flag)
-    return self._parent.getFlags(self, flag --[[@as ObjectFlag?]]) --[[@as EntityFlags|true|nil]]
-end
+-- --- Get instances Flags
+-- --- @param flag EntityFlag? If specified, only gets that flag
+-- --- @return EntityFlags|true|nil
+-- --- @nodiscard
+-- function entity:getFlags(flag)
+--     --- @cast flag ObjectFlag?
+--     return self._parent.getFlags(self, flag) --[[@as EntityFlags|true|nil]]
+-- end
 
 --- Get instances Components
 --- @param id ComponentID? If specified, only gets that component
@@ -301,7 +300,7 @@ end
 --- @return -1|1|nil
 function entity:checkHorizontalMovement()
     local result
-    if not self:getFlags('is_cpu') and self.moveInputs then
+    if not self.flags.is_cpu and self.moveInputs then
         if wasPressed(self.moveInputs.right) then
             result = 1
         elseif wasPressed(self.moveInputs.left) then
@@ -316,7 +315,7 @@ end
 --- @return -1|1|nil
 function entity:checkVerticalMovement()
     local result
-    if not self:getFlags('is_cpu') and self.moveInputs then
+    if not self.flags.is_cpu and self.moveInputs then
         if wasPressed(self.moveInputs.up) then
             result = 1
         elseif wasPressed(self.moveInputs.down) then

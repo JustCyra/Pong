@@ -1,5 +1,5 @@
 --- @class Registry
---- @field list table<RegistryType, table<string, RegistryInstanceType>>
+--- @field public list table<RegistryType, table<string, RegistryInstanceType>>
 local registry = {
     list = {}
 }
@@ -98,7 +98,6 @@ end
 
 -- function registry:load()
 --     self:forEach(nil, function (instance)
---         --- @diagnostic disable-next-line: param-type-mismatch
 --         if instance.load then instance:load() end
 --         runComponentFunc(instance:getComponents(Components.types.love_load), instance)
 --     end)
@@ -106,7 +105,6 @@ end
 
 function registry:update(delta)
     self:forEach(nil, function (instance)
-        --- @diagnostic disable-next-line: param-type-mismatch
         if instance.update then instance:update(delta) end
         runComponentFunc(instance:getComponents(Components.types.love_update), instance, delta)
     end)
@@ -114,7 +112,6 @@ end
 
 function registry:draw()
     self:forEach(nil, function (instance)
-        --- @diagnostic disable-next-line: param-type-mismatch
         if instance.draw then instance:draw() end
         runComponentFunc(instance:getComponents(Components.types.love_draw), instance)
     end)

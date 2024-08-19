@@ -1,13 +1,13 @@
-Identifier  = require "src.engine.class.identifier"
-Vectors     = require "src.engine.class.vectors"
-Components  = require "src.engine.class.components"
-Utility     = require "src.engine.class.utility"
+Identifier  = require "engine.class.identifier"
+Vectors     = require "engine.class.vectors"
+Components  = require "engine.class.components"
+Utility     = require "engine.class.utility"
 
-Registry    = require "src.engine.class.registry"
-Input       = require "src.engine.class.input"
+Registry    = require "engine.class.registry"
+Input       = require "engine.class.input"
 
-Object      = require "src.engine.class.object"
-Entity      = require "src.engine.class.entity"
+Object      = require "engine.class.object"
+Entity      = require "engine.class.entity"
 
 local width, height
 local score
@@ -25,7 +25,7 @@ function love.load()
     love.window.setMode(800, 600, {
         fullscreen = false,
         fullscreentype = 'desktop',
-        vsync = -1,
+        vsync = false,
         msaa = 0,
         stencil = true,
         depth = 0,
@@ -209,12 +209,12 @@ function love.load()
         :setSize(25, 100)
         :setCollision()
         :setAcceleration(1500)
-        -- :setMoveInputs(nil, nil, {'w'}, {'s'})
+        :setMoveInputs(nil, nil, {'w'}, {'s'})
         :setComponents(Components.new()
             :engine_custom_data({
                 pin_side = 'left'
             })
-            :engine_apply_vertical_movement(cpu_movement)
+            -- :engine_apply_vertical_movement(cpu_movement)
             :create()
         )
     :create()
@@ -242,9 +242,12 @@ end
 function love.draw()
     Registry:draw()
 
+    -- love.timer.step()
+
     love.graphics.print(string.format('FPS: %s', love.timer.getFPS()), 0, 0)
-    love.graphics.print(string.format('Scores: %s/%s', score.left, score.right), 0, 14)
-    -- love.graphics.print(string.format('Test: %s', Vectors.vec(3, 3, 1, 0)), 0, 28)
+    love.graphics.print(string.format('Test: %s', pin_left.flags.is_cpu), 0, 14)
+    love.graphics.print(tostring(score.left), love.math.newTransform(width/3-7, 14, 0, 2, 2))
+    love.graphics.print(tostring(score.right), love.math.newTransform(width/3*2-7, 14, 0, 2, 2))
 end
 
 function love.keypressed(key, scanCode, isRepeat)

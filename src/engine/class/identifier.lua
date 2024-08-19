@@ -3,9 +3,9 @@ local identifier_class = {}
 identifier_class.__index = identifier_class
 
 --- @class Identifer
---- @field translation_key? string
---- @field path string
---- @field namespace string
+--- @field private translation_key? string
+--- @field public path string
+--- @field public namespace string
 local identifier = {}
 identifier.__index = identifier
 

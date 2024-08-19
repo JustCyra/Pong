@@ -1,33 +1,34 @@
 --- @class Object.class
---- @field _parent nil
+--- @field protected _parent nil
 local object_class = {}
 object_class.__index = object_class
 object_class._parent = nil
 
 --- @class Object.setters
---- @field _parent nil
---- @field id Identifer
+--- @field protected _parent nil
+--- @field public id Identifer
 local object_unfinished = {}
 object_unfinished.__index = object_unfinished
 object_unfinished._parent = nil
 
 --- @class Object
---- @field _parent nil
---- @field _type? 'object'
---- @field id Identifer
+--- @field protected _parent nil
+--- @field public _type? 'object'
+--- @field public _deleted boolean
+--- @field public id Identifer
 ---
---- @field renderType ObjectRenderType
+--- @field public renderType ObjectRenderType
 ---
---- @field pos Vector2
---- @field size Vector2
---- @field collision? Vector2
+--- @field public pos Vector2
+--- @field public size Vector2
+--- @field public collision? Vector2
 ---
---- @field flags? ObjectFlags
---- @field components? ComponentList
+--- @field public flags? ObjectFlags
+--- @field protected components? ComponentList
 ---
---- @field load? fun(self: self)
---- @field update? fun(self: self, delta: number)
---- @field draw? fun(self: self)
+--- @field public load? fun(self: self)
+--- @field public update? fun(self: self, delta: number)
+--- @field public draw? fun(self: self)
 local object = {}
 object.__index = object
 object._parent = 'object'
@@ -39,7 +40,7 @@ local format = 'Object[%s] | Pos: %s'
 --- @param id Identifer
 --- @return Object.setters object_unfinished
 function object_class.new(id)
-    return setmetatable({ id = id }, object_unfinished)
+    return setmetatable({ id = id, flags = {} }, object_unfinished)
 end
 
 --- Get methods used for setting up an `Object`
@@ -68,7 +69,8 @@ function object_unfinished:setPos(x_or_vec, y)
     if type(x_or_vec) == "number" then
         self.pos = Vectors.vec2(x_or_vec, y)
     else
-        self.pos = x_or_vec--[[@as Vector2]]
+        --- @cast x_or_vec Vector2
+        self.pos = x_or_vec
     end
     return self
 end
@@ -80,12 +82,13 @@ function object_unfinished:setSize(x_or_vec, y)
     if type(x_or_vec) == "number" then
         self.size = Vectors.vec2(x_or_vec, y)
     else
-        self.size = x_or_vec--[[@as Vector2]]
+        --- @cast x_or_vec Vector2
+        self.size = x_or_vec
     end
     return self
 end
 
---- Set and enable/disable instances Collision
+--- Set and enable/disable instances Collision<br>
 --- If `x_or_vec` is `nil`, `object.size` is used as an argument
 --- @param x_or_vec? number|Vector2
 --- @param y? number
@@ -96,7 +99,8 @@ function object_unfinished:setCollision(x_or_vec, y)
     elseif type(x_or_vec) == "number" then
         self.collision = Vectors.vec2(x_or_vec, y)
     else
-        self.collision = x_or_vec--[[@as Vector2]]
+        --- @cast x_or_vec Vector2
+        self.collision = x_or_vec
     end
 
     if self.collision and self.collision.x == 0 and self.collision.y == 0 then
@@ -141,16 +145,25 @@ function object_unfinished:create()
         'size', self.size
     ))
 
-    Registry:register(setmetatable(self, object) --[[@as Object]])
-    return self --[[@as Object]]
+    --- @diagnostic disable-next-line: cast-type-mismatch
+    --- @cast self Object
+    self._deleted = false
+    Registry:register(setmetatable(self, object))
+    return self
 end
 
 --- Remove this instance of `Object`
 --- @return nil
 function object:delete()
     Registry:unregister(self)
-    self = nil
+    self._deleted = true
     return nil
+end
+
+--- @return boolean
+--- @nodiscard
+function object:exists()
+    return not self._deleted
 end
 
 --- @return string
@@ -200,15 +213,14 @@ function object:setComponents(components)
     return object_unfinished.setComponents(self, components)
 end
 
---- Get instances Flags
---- @param flag? ObjectFlag
---- @return ObjectFlags|boolean|nil
---- @nodiscard
-function object:getFlags(flag)
-    if self.flags then
-        return flag and self.flags[flag] or self.flags
-    end
-end
+-- --- Get instances Flags
+-- --- @return ObjectFlags|boolean|nil
+-- --- @nodiscard
+-- function object:getFlags()
+--     if self.flags then
+--         return flag and self.flags[flag] or self.flags
+--     end
+-- end
 
 --- Get instances Components
 --- @param id? ComponentID If specified, only gets that component
@@ -276,7 +288,7 @@ end
 --- @param offset? Vector2
 --- @return boolean
 function object:isCollidingWith(target, offset)
-    if self:getFlags('ignore_collisions') then
+    if self.flags.ignore_collisions then
         return false
     end
 

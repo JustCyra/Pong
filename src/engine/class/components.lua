@@ -1,7 +1,8 @@
 --- @class Components
---- @field list ComponentList
+--- @field private list ComponentList
 local components = {
     list = {},
+    --- @enum ComponentTypes
     types = {
         love_load = 'love:load',
         love_update = 'love:update',
