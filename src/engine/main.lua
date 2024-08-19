@@ -1,13 +1,13 @@
-Identifier  = require "src.engine.class.identifier"
-Vectors     = require "src.engine.class.vectors"
-Components  = require "src.engine.class.components"
-Utility     = require "src.engine.class.utility"
+Identifier  = require "engine.class.Identifier"
+Vectors     = require "engine.class.Vectors"
+Components  = require "engine.class.Components"
+Utility     = require "engine.class.Utility"
 
-Registry    = require "src.engine.class.registry"
-Input       = require "src.engine.class.input"
+Registry    = require "engine.class.Registry"
+Input       = require "engine.class.Input"
 
-Object      = require "src.engine.class.object"
-Entity      = require "src.engine.class.entity"
+Object      = require "engine.class.Object"
+Entity      = require "engine.class.Entity"
 
 local width, height
 local score
@@ -28,9 +28,9 @@ function engine.load()
         :setPos(width/2-12.5, height/2-12.5)
         :setSize(25, 25)
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 game_ball_spawn_point = true
-            })
+            }
             :create()
         )
     :create()
@@ -41,11 +41,11 @@ function engine.load()
         :setSize(game_ball_spawn_point.size:copy())
         :setCollision()
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 game_ball = true,
                 direction = Vectors.vec2(math.random() > 0.5 and -10 or 10, math.random(-5, 5)),
                 speed = 20,
-            })
+            }
             :love_update(function (self, delta)
                 local custom_data = self:getCustomData()
                 local direction = custom_data.direction --[[@as Vector2]]
@@ -53,7 +53,7 @@ function engine.load()
                 custom_data.speed = custom_data.speed + 1 * delta
         
                 Registry:forEach(nil, function (instance)
-                    if instance.type == 'entity' then
+                    if instance._type == 'entity' then
                         if self:isCollidingWith(instance, {x = direction.x * delta * custom_data.speed, y = 0}) then
                             collided = true
                             direction.x = direction.x == 10 and -10 or 10
@@ -63,7 +63,7 @@ function engine.load()
                             collided = true
                             direction.y = direction.y * -1
                         end
-                    elseif instance.type == 'object' then
+                    elseif instance._type == 'object' then
                         if instance == self or not instance.collision then
                             return
                         end
@@ -137,9 +137,9 @@ function engine.load()
         :setAcceleration(1500)
         -- :setMoveInputs(nil, nil, {'w'}, {'s'})
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 pin_side = 'left'
-            })
+            }
             :engine_apply_vertical_movement(cpu_movement)
             :create()
         )
@@ -152,9 +152,9 @@ function engine.load()
         :setCollision()
         :setAcceleration(1500)
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 pin_side = 'right'
-            })
+            }
             :engine_apply_vertical_movement(cpu_movement)
             :create()
         )

@@ -1,13 +1,16 @@
-Identifier  = require "engine.class.identifier"
-Vectors     = require "engine.class.vectors"
-Components  = require "engine.class.components"
-Utility     = require "engine.class.utility"
+Identifier  = require "engine.class.Identifier"
+Vectors     = require "engine.class.Vectors"
+Components  = require "engine.class.Components"
+Utility     = require "engine.class.Utility"
 
-Registry    = require "engine.class.registry"
-Input       = require "engine.class.input"
+Registry    = require "engine.class.Registry"
+Input       = require "engine.class.Input"
 
-Object      = require "engine.class.object"
-Entity      = require "engine.class.entity"
+-- Class       = require "engine.class.Class"
+Object      = require "engine.class.Object"
+Entity      = require "engine.class.Entity"
+
+local args, unfilteredArgs, debug
 
 local width, height
 local score
@@ -20,7 +23,18 @@ local pin_left
 --- @type Entity
 local pin_right
 
-function love.load()
+--- @param arg string[]
+--- @param unfilteredArg string[]
+function love.load(arg, unfilteredArg)
+    args, unfilteredArgs = arg, unfilteredArg
+
+    for _, value in ipairs(args) do
+        if value  == '--debug' then
+            debug = true
+            break
+        end
+    end
+
     love.window.setTitle('Pong')
     love.window.setMode(800, 600, {
         fullscreen = false,
@@ -63,9 +77,9 @@ function love.load()
         :setSize(1, height - 100)
         :setCollision(0, height - 100)
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 game_goal = 1
-            })
+            }
             :create()
         )
     :create()
@@ -75,9 +89,9 @@ function love.load()
         :setSize(1, height - 100)
         :setCollision(0, height - 100)
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 game_goal = 2
-            })
+            }
             :create()
         )
     :create()
@@ -87,9 +101,9 @@ function love.load()
         :setPos(width/2-12.5, height/2-12.5)
         :setSize(25, 25)
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 game_ball_spawn_point = true
-            })
+            }
             :create()
         )
     :create()
@@ -100,11 +114,11 @@ function love.load()
         :setSize(game_ball_spawn_point.size:copy())
         :setCollision()
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 game_ball = true,
                 direction = Vectors.vec2(math.random() > 0.5 and -10 or 10, math.random(-5, 5)),
                 speed = 20,
-            })
+            }
             :love_update(function (self, delta)
                 local custom_data = self:getCustomData()
                 local direction = custom_data.direction --[[@as Vector2]]
@@ -211,9 +225,9 @@ function love.load()
         :setAcceleration(1500)
         :setMoveInputs(nil, nil, {'w'}, {'s'})
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 pin_side = 'left'
-            })
+            }
             -- :engine_apply_vertical_movement(cpu_movement)
             :create()
         )
@@ -226,15 +240,16 @@ function love.load()
         :setCollision()
         :setAcceleration(1500)
         :setComponents(Components.new()
-            :engine_custom_data({
+            :engine_custom_data{
                 pin_side = 'right'
-            })
+            }
             :engine_apply_vertical_movement(cpu_movement)
             :create()
         )
     :create()
 end
 
+--- @param delta number
 function love.update(delta)
     Registry:update(delta)
 end
@@ -242,10 +257,13 @@ end
 function love.draw()
     Registry:draw()
 
-    -- love.timer.step()
-
-    love.graphics.print(string.format('FPS: %s', love.timer.getFPS()), 0, 0)
-    love.graphics.print(string.format('Test: %s', pin_left.flags.is_cpu), 0, 14)
+    if debug then
+        local name, version, _, device = love.graphics.getRendererInfo()
+        love.graphics.print(string.format('[%s] %s (%s) | %s', jit.os .. ' ' .. jit.arch, name, version, device), 0, 0)
+    end
+    love.graphics.print(string.format('FPS: %s', love.timer.getFPS()), 0, debug and 14 or 0)
+    -- love.graphics.print(string.format('Test: %s', love.graphics.), 0, 14)
+    -- love.graphics.newText(love.graphics.getFont(), tostring(score.left)):add('', width/3-7, 14, 0, 2, 2)
     love.graphics.print(tostring(score.left), love.math.newTransform(width/3-7, 14, 0, 2, 2))
     love.graphics.print(tostring(score.right), love.math.newTransform(width/3*2-7, 14, 0, 2, 2))
 end
