@@ -11,6 +11,7 @@ Object      = require "engine.class.Object"
 Entity      = require "engine.class.Entity"
 
 local args, unfilteredArgs, debug
+local name, version, device
 
 local width, height
 local score
@@ -35,22 +36,11 @@ function love.load(arg, unfilteredArg)
         end
     end
 
-    love.window.setTitle('Pong')
-    love.window.setMode(800, 600, {
-        fullscreen = false,
-        fullscreentype = 'desktop',
-        vsync = false,
-        msaa = 0,
-        stencil = true,
-        depth = 0,
-        resizable = false,
-        borderless = false,
-        centered = true,
-        display = 1,
-        minwidth = 800,
-        minheight = 600,
-        highdpi = false,
-    })
+    name, version, _, device = love.graphics.getRendererInfo()
+
+    if debug then
+        love.window.setTitle(string.format('%s <%s>', love.window.getTitle(), name))
+    end
 
     math.randomseed(love.timer.getTime())
 
@@ -258,8 +248,7 @@ function love.draw()
     Registry:draw()
 
     if debug then
-        local name, version, _, device = love.graphics.getRendererInfo()
-        love.graphics.print(string.format('[%s] %s (%s) | %s', jit.os .. ' ' .. jit.arch, name, version, device), 0, 0)
+        love.graphics.print(string.format('[%s] | %s (%s)', jit.os .. ' ' .. jit.arch, device, version), 0, 0)
     end
     love.graphics.print(string.format('FPS: %s', love.timer.getFPS()), 0, debug and 14 or 0)
     -- love.graphics.print(string.format('Test: %s', love.graphics.), 0, 14)

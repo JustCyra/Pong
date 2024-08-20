@@ -1,0 +1,18 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Love2d",
+            "type": "shell",
+            "command": "love ${workspaceRoot}/src"
+        },
+        {
+            "label": "Build Program",
+            "type": "shell",
+            "command": "${workspaceRoot}/.love-build-0.6-linux/AppRun ${workspaceRoot}/src/main.lua",
+            "problemMatcher": []
+        }
+    ]
+}
