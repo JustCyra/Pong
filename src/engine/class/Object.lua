@@ -6,16 +6,15 @@ object_class._parent = nil
 
 --- @class Object.setters
 --- @field protected _parent nil
---- @field public id Identifer
+--- @field public id Identifier
 local object_unfinished = {}
 object_unfinished.__index = object_unfinished
 object_unfinished._parent = nil
 
 --- @class Object
 --- @field protected _parent nil
---- @field public _type? 'object'
 --- @field public _deleted boolean
---- @field public id Identifer
+--- @field public id Identifier
 ---
 --- @field public renderType ObjectRenderType
 ---
@@ -32,15 +31,14 @@ object_unfinished._parent = nil
 local object = {}
 object.__index = object
 object._parent = 'object'
-object._type = 'object'
 
 local format = 'Object[%s] | Pos: %s'
 
 --- Create a new instance of `Object`
---- @param id Identifer
+--- @param id string
 --- @return Object.setters object_unfinished
 function object_class.new(id)
-    return setmetatable({ id = id, flags = {} }, object_unfinished)
+    return setmetatable({ id = Identifier.new('object', id), flags = {} }, object_unfinished)
 end
 
 --- Get methods used for setting up an `Object`
@@ -247,10 +245,16 @@ function object:getCustomData(key)
     return key and custom_data[key] or custom_data
 end
 
+--- Gets this instance Class Type
+--- @return RegistryType
+function object:getClassType()
+    return self.id.class
+end
+
 --- Gets this instance Translation Key
 --- @return string
 function object:getTranslationKey()
-    return self.id:getOrCreateTranslationKey(self._type)
+    return self.id:getOrCreateTranslationKey(self:getClassType())
 end
 
 --- Gets a point where the `Object` instance origin is
@@ -318,7 +322,7 @@ end
 
 -- setmetatable(object_class, {
 --     --- Create a new instance of `Object`
---     --- @param id Identifer
+--     --- @param id Identifier
 --     --- @return Object.setters object_unfinished
 --     __call = function (_, id)
 --         return object_class.new(id)

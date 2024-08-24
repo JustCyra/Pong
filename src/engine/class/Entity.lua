@@ -12,7 +12,6 @@ entity_unfinished._parent = Object.getSettersClass()
 
 --- @class Entity : Object
 --- @field protected _parent Object
---- @field public _type? 'entity'
 --- 
 --- @field public vel Vector2
 --- @field public acceleration integer
@@ -25,16 +24,15 @@ entity_unfinished._parent = Object.getSettersClass()
 --- @field public draw? fun(self: self)
 local entity = setmetatable({} --[[@as Entity]], Object.getInstanceClass())
 entity.__index = entity
-entity._type = 'entity'
 entity._parent = Object.getInstanceClass()
 
 local format = 'Entity[%s] | Pos: %s'
 
 --- Create a new instance of `Entity`
---- @param id Identifer
+--- @param id string
 --- @return Entity.setters entity_unfinished
 function entity_class.new(id)
-    return setmetatable({ id = id, flags = {}, vel = Vectors.vec2() }, entity_unfinished)
+    return setmetatable({ id = Identifier.new('entity', id), flags = {}, vel = Vectors.vec2() }, entity_unfinished)
 end
 
 --- Get methods used for setting up an `Entity`
@@ -247,6 +245,12 @@ function entity:getCustomData(key)
     return self._parent.getCustomData(self, key)
 end
 
+--- Gets this instance Class Type
+--- @return RegistryType
+function entity:getClassType()
+    return self._parent.getClassType(self)
+end
+
 --- Gets this instance Translation Key
 --- @return string
 function entity:getTranslationKey()
@@ -437,7 +441,7 @@ end
 
 -- setmetatable(entity_class, {
 --     --- Create a new instance of `Entity`
---     --- @param id Identifer
+--     --- @param id Identifier
 --     --- @return Entity.setters entity_unfinished
 --     __call = function (_, id)
 --         return entity_class.new(id)

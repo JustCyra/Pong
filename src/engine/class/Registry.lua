@@ -9,29 +9,31 @@ local registry = {
 --- @return RegistryInstanceType instance
 function registry:register(instance)
     assert(instance.id, '[REGISTRY]: Cannot register an instance as the `id` was missing!')
+    local instance_type = instance:getClassType()
 
-    if not self.list[instance._type] then
-        self.list[instance._type] = {}
+    if not self.list[instance_type] then
+        self.list[instance_type] = {}
     end
 
-    self.list[instance._type][instance.id:toString()] = instance
+    self.list[instance_type][instance.id:toString()] = instance
     return instance
 end
 
 --- Remove a registered entry from the `registry` list
 --- @param instance RegistryInstanceType
 function registry:unregister(instance)
-    assert(self.list[instance._type], '[REGISTRY]: Cannot unregister from a registry type (' .. instance._type .. ') that was not used already!')
+    local instance_type = instance:getClassType()
+    assert(self.list[instance_type], '[REGISTRY]: Cannot unregister from a registry type (' .. instance_type .. ') that was not used already!')
 
-    for key, value in pairs(self.list[instance._type]) do
+    for key, value in pairs(self.list[instance_type]) do
         if value == instance then
-            self.list[instance._type][key] = nil
+            self.list[instance_type][key] = nil
         end
     end
 end
 
 --- Get a registered entry from the `registry` list by `identifier`
---- @param id Identifer|string
+--- @param id Identifier|string
 --- @param key? RegistryType
 --- @return RegistryInstanceType? instance, RegistryType? key
 function registry:getByID(id, key)

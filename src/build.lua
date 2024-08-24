@@ -24,13 +24,13 @@ local BuildPlatforms = {
 return {
     name = 'Pong',
     developer = 'Cyra',
-    icon = 'resources/images/executable/icon.png',
+    icon = 'resources/images/icon.png',
     version = '0.1',
     love = '11.5',
     output = '../.builds',
     ignore = {
         'build.lua',
-        '',
+        'engine/type',
     },
     use32bit = true,
     platforms = {

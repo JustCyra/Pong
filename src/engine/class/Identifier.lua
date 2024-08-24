@@ -2,44 +2,30 @@
 local identifier_class = {}
 identifier_class.__index = identifier_class
 
---- @class Identifer
+--- @class Identifier
 --- @field private translation_key? string
 --- @field public path string
---- @field public namespace string
+--- @field public class string
 local identifier = {}
 identifier.__index = identifier
 
 local format = '%s:%s'
 local translation_key_format = '%s.%s.%s'
-local default_namespace = 'game'
 
 --- Create a new `identifier`
+--- @param class string
 --- @param path string
---- @param namespace? string
---- @return Identifer
-function identifier_class.new(path, namespace)
-    return setmetatable({ path = path, namespace = namespace or default_namespace }, identifier)
-end
-
---- Sets a `namespace` for all `identifier` functions to use if one is not provided
---- @param namespace string
-function identifier_class.setDefaultNamespace(namespace)
-    default_namespace = namespace
-end
-
---- Gets a `namespace` for all `identifier` functions to use if one is not provided
---- @return string namespace
---- @nodiscard
-function identifier_class.getDefaultNamespace()
-    return default_namespace
+--- @return Identifier
+function identifier_class.new(class, path)
+    return setmetatable({ path = path, class = class }, identifier)
 end
 
 --- Unpack the `identifier` into `namespace` and `path`
---- @return string namespace
+--- @return string class
 --- @return string path
 --- @nodiscard
 function identifier:unpack()
-    return self.namespace, self.path
+    return self.class, self.path
 end
 
 --- Convert `identifier` to `string`
@@ -50,7 +36,7 @@ function identifier:toString()
 end
 
 --- Compares 2 `identifier` if they're equal
---- @param id Identifer|string
+--- @param id Identifier|string
 --- @return boolean
 function identifier:equals(id)
     local id_type = type(id)
@@ -60,7 +46,7 @@ function identifier:equals(id)
 
     return
         id_type == 'string' and self:toString() == id or
-        id_type == 'table' and self.namespace == id.namespace and self.path == id.path
+        id_type == 'table' and self.class == id.class and self.path == id.path
 end
 
 --- Gets or creates a Translation Key prefixed with a given `key`
@@ -79,7 +65,7 @@ end
 --     --- Create a new `identifier`
 --     --- @param path string
 --     --- @param namespace? string
---     --- @return Identifer
+--     --- @return Identifier
 --     __call = function (_, path, namespace)
 --         return identifier_class.new(path, namespace)
 --     end

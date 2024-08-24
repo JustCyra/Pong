@@ -1,17 +1,4 @@
-Identifier  = require "engine.class.Identifier"
-Vectors     = require "engine.class.Vectors"
-Components  = require "engine.class.Components"
-Utility     = require "engine.class.Utility"
-
-Registry    = require "engine.class.Registry"
-Input       = require "engine.class.Input"
-
--- Class       = require "engine.class.Class"
-Object      = require "engine.class.Object"
-Entity      = require "engine.class.Entity"
-
-local args, unfilteredArgs, debug
-local name, version, device
+Engine = require 'src.engine.Engine'
 
 local width, height
 local score
@@ -24,44 +11,23 @@ local pin_left
 --- @type Entity
 local pin_right
 
---- @param arg string[]
---- @param unfilteredArg string[]
-function love.load(arg, unfilteredArg)
-    args, unfilteredArgs = arg, unfilteredArg
-
-    for _, value in ipairs(args) do
-        if value  == '--debug' then
-            debug = true
-            break
-        end
-    end
-
-    name, version, _, device = love.graphics.getRendererInfo()
-
-    if debug then
-        love.window.setTitle(string.format('%s <%s>', love.window.getTitle(), name))
-    end
-
-    math.randomseed(love.timer.getTime())
-
+Events.ON_LOAD:register('main_load', function (arg, unfilteredArg)
     width, height = love.window.getMode()
     score = {left = 0, right = 0}
 
-    Identifier.setDefaultNamespace('pong')
-
-    Object.new(Identifier.new('wall_top'))
+    Object.new('wall_top')
         :setRenderType('fill')
         :setPos(50, 50)
         :setSize(width - 100, 1)
         :setCollision(width, 0)
     :create()
-    Object.new(Identifier.new('wall_bottom'))
+    Object.new('wall_bottom')
         :setRenderType('fill')
         :setPos(50, height - 50)
         :setSize(width - 100, 1)
         :setCollision(width, 0)
     :create()
-    Object.new(Identifier.new('wall_left'))
+    Object.new('wall_left')
         :setRenderType('fill')
         :setPos(50, 50)
         :setSize(1, height - 100)
@@ -73,7 +39,7 @@ function love.load(arg, unfilteredArg)
             :create()
         )
     :create()
-    Object.new(Identifier.new('wall_right'))
+    Object.new('wall_right')
         :setRenderType('fill')
         :setPos(width - 50, 50)
         :setSize(1, height - 100)
@@ -86,7 +52,7 @@ function love.load(arg, unfilteredArg)
         )
     :create()
 
-    game_ball_spawn_point = Object.new(Identifier.new('ball_spawn_point'))
+    game_ball_spawn_point = Object.new('ball_spawn_point')
         :setRenderType('none')
         :setPos(width/2-12.5, height/2-12.5)
         :setSize(25, 25)
@@ -98,7 +64,7 @@ function love.load(arg, unfilteredArg)
         )
     :create()
 
-    game_ball = Object.new(Identifier.new('ball'))
+    game_ball = Object.new('ball')
         :setRenderType('fill')
         :setPos(game_ball_spawn_point.pos:copy())
         :setSize(game_ball_spawn_point.size:copy())
@@ -116,7 +82,7 @@ function love.load(arg, unfilteredArg)
                 custom_data.speed = custom_data.speed + 1 * delta
         
                 Registry:forEach(nil, function (instance)
-                    if instance._type == 'entity' then
+                    if instance:getClassType() == 'entity' then
                         if self:isCollidingWith(instance, {x = direction.x * delta * custom_data.speed, y = 0}) then
                             collided = true
                             direction.x = direction.x == 10 and -10 or 10
@@ -126,7 +92,7 @@ function love.load(arg, unfilteredArg)
                             collided = true
                             direction.y = direction.y * -1
                         end
-                    elseif instance._type == 'object' then
+                    elseif instance:getClassType() == 'object' then
                         if instance == self or not instance.collision then
                             return
                         end
@@ -188,8 +154,9 @@ function love.load(arg, unfilteredArg)
                 target_pos = screen_center
             else
                 local target = Registry:getByID(
-                    self.id.path == 'pin_left' and(Identifier.getDefaultNamespace() .. ':pin_right') or
-                    (Identifier.getDefaultNamespace() .. ':pin_left'))
+                    self.id.path == 'pin_left' and ('entity:pin_right') or
+                    ('entity:pin_left')
+                )
                 if not target then
                     return false
                 end
@@ -207,7 +174,7 @@ function love.load(arg, unfilteredArg)
         return false
     end
 
-    pin_left = Entity.new(Identifier.new('pin_left'))
+    pin_left = Entity.new('pin_left')
         :setRenderType('fill')
         :setPos(50, height/2 - 100/2)
         :setSize(25, 100)
@@ -223,7 +190,7 @@ function love.load(arg, unfilteredArg)
         )
     :create()
 
-    pin_right = Entity.new(Identifier.new('pin_right'))
+    pin_right = Entity.new('pin_right')
         :setRenderType('fill')
         :setPos(width - 75, height/2 - 100/2)
         :setSize(25, 100)
@@ -237,25 +204,12 @@ function love.load(arg, unfilteredArg)
             :create()
         )
     :create()
-end
+end)
 
---- @param delta number
-function love.update(delta)
-    Registry:update(delta)
-end
-
-function love.draw()
-    Registry:draw()
-
-    if debug then
-        love.graphics.print(string.format('[%s] | %s (%s)', jit.os .. ' ' .. jit.arch, device, version), 0, 0)
-    end
-    love.graphics.print(string.format('FPS: %s', love.timer.getFPS()), 0, debug and 14 or 0)
-    -- love.graphics.print(string.format('Test: %s', love.graphics.), 0, 14)
-    -- love.graphics.newText(love.graphics.getFont(), tostring(score.left)):add('', width/3-7, 14, 0, 2, 2)
-    love.graphics.print(tostring(score.left), love.math.newTransform(width/3-7, 14, 0, 2, 2))
-    love.graphics.print(tostring(score.right), love.math.newTransform(width/3*2-7, 14, 0, 2, 2))
-end
+Events.ON_DRAW:register('main_draw', function ()
+    love.graphics.printf(tostring(score.left), love.math.newTransform(width/3-7, 14, 0, 2, 2), 100)
+    love.graphics.printf(tostring(score.right), love.math.newTransform(width/3*2-7, 14, 0, 2, 2), 100)
+end)
 
 function love.keypressed(key, scanCode, isRepeat)
     Input:keypressed(key, scanCode, isRepeat)

@@ -14,6 +14,19 @@
             }
         },
         {
+            "name": "Launch LOVE2D Debug",
+            "type": "lua-local",
+            "request": "launch",
+            "program": {
+                "command": "love"
+            },
+            "args": [
+                "src",
+                "--fps",
+                "--debug"
+            ]
+        },
+        {
             "name": "Launch LOVE2D",
             "type": "lua-local",
             "request": "launch",
@@ -21,9 +34,8 @@
                 "command": "love"
             },
             "args": [
-                "--console",
                 "src",
-                "--debug"
+                "--fps"
             ]
         },
     ]
